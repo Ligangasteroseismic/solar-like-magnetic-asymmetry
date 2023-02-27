@@ -7,6 +7,7 @@ This file introduces how my codes run for solar-like RGB stars. My codes can pro
 
 Preparation: you should make a folder named 'starname_MCMC' (replace starname by something like KIC001234567, a 9-digit KIC number is necessary).
 Note that '_MCMC' is very important since my code searches for the starname by that. Then, create a file 'starname_light_curves.dat' in that folder, where the first column is time and the second column is flux.
+You can unzip the zip file 'KIC008684542_MCM.zip' to have an example data.
 
 1: solar_like_lightcurves.py
     This code is the foundation for everything. It processes the light curve, calculate PSD, nu_max, delta_nu, fit l=0 and l=2 p modes, calculate the stretched echelle diagram and identify azimuthal order, and run a fit to the mixed modes.
