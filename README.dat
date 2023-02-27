@@ -1,0 +1,52 @@
+Author: Gang Li.
+Date: 27 Feb 2022.
+Email: gang.li@kuleuven.be
+Contact me if you have any questions.
+
+This file introduces how my codes run for solar-like RGB stars. My codes can process the light curves, calculate the PSD, fit the power spectrum, and finally measure the magnetic fields.
+
+Preparation: you should make a folder named 'starname_MCMC' (replace starname by something like KIC001234567, a 9-digit KIC number is necessary).
+Note that '_MCMC' is very important since my code searches for the starname by that. Then, create a file 'starname_light_curves.dat' in that folder, where the first column is time and the second column is flux.
+
+1: solar_like_lightcurves.py
+    This code is the foundation for everything. It processes the light curve, calculate PSD, nu_max, delta_nu, fit l=0 and l=2 p modes, calculate the stretched echelle diagram and identify azimuthal order, and run a fit to the mixed modes.
+    Line 1739: FIRST TIME make sure try_autocorrelation=False
+    Line 1403: give your folders as a list, such as dir_list = ['./KIC008684542_MCMC']. You can also use something like dir_list = glob.glob('./KIC*_MCMC'). The code will run one by one.
+    Line 1418 (if '4360072' in dir_list[start_index]:): given a KIC number and start the code from this folder. Or in line 1422 (start_index = 0), start from the first folder.
+    Line 1445 (time, flux = MAIN_KEPLER_PROGRAM_no_emcee(one_dir, STAR_NAME, exit_for_solar_like)): remove the long trend of the light curve.
+    Line 1469 (freq, PSD = psd_yaguang(time, flux, oversampling=2, freqMin=None, freqMax=None, freq=None, return_val="psd_old")): calculate the PSD using Yaguang Li's code.
+    Line 1513 (#judge=input('Is the numax correct? Input 1 to continue, 9999 to next star, input anything else to click on the figure>>>')): you can manually click on the figure to input a nu_max if the automated method doesn't work well.
+    nu_max will be read from Jie Yu's table if the value is larger than 190 microHz.
+    Line 1548 (if_run_numax_correlation = True): turn it off if you have calculated nu_max.
+    The code will search for l=0 and l=2 p modes and fit Lorentzien profiles on that. If the automated code doesn't work well, in Line 1692, modify 'if_manual_mode = False' to 'True' to turn on manual mode.
+    Since Line 1739: since try_autocorrelation=False, the code will jump to Line 2027.
+    After line 2027, the code run a search for the best delta_Pi in the stretched echelle diagram and terminate.
+    Run the code again, it will allow you to manually select the best delta_Pi and different ridges in the stretched echelle diagram to do the m mode identification.
+    Slightly change the value of delta_Pi, and select a vertical ridge. Make sure that the smaller m, the smaller delta Pi.
+    Read the menu and play several time. I believe you will get what I did here...
+
+    Go back to Line 1739, turn on the variable "try_autocorrelation". Run the code again. The code will give a fit of the mixed mode based on the \zeta function.
+
+    Output of this code:
+    starname_echelle_with_grid_splittings.png: the best-fitting result of mixed modes and splitting identification of rotational splittings.
+    optimize_grid_corner.png: six parameters: delta_Pi_1, q, epsilon_g, p_mode_shift, Omega_g, Omega_p.
+    starname_grid_optimized_parameters.dat: the results of the six parameters and their uncertainties.
+    starname_bin_points_for_l_1_m_*.dat: the selected modes, which will be corrected in the next code add_modes_manually.py
+    In the sub-folder ./solar_like_splittings: there are the Lorentzien fit of the symmetric splittings. If the asymmetry is strong, the fit will fail.
+    and something else...
+
+2: add_modes_manually.py
+    Similar beginning is used. dir_list for a list of directory of your data, wanted_KIC for a given KIC number where the folder will be used as the first one, or 'start_index = 0' to star from the first folder.
+    You can click on the figure to modify the modes. You can give an azimuthal order and add and delete them.
+
+3: find_asymmetric_splittings.py
+    Here the code fits the asymmetric splittings by three lorentzien profiles.
+    The output is in the sub-folder './asymmetry'. You can find the fitted PSD and their parameters, as well as the most important one: starname_asymmetry_vs_freq.png.
+
+You can have a look about the picture './starname_MCMC/asymmetry/starname_asymmetry_vs_freq.png' to find if the star shows magnetism-induced asymmetry.
+
+4: fit_magnetic_shift.py
+    modify the input folder and run this code. It will give you the measurements of the eight parameters. Sometimes you need to try several times for a good solution...
+    1: delta Pi. 2: q. 3: epsilon_g. 4: p_mode_shift. 5: Omega_g. 6: Omega_p. 7: asymmetry parameter a. 8: magnetic shift delta_nu_B.
+    outputs are in ./magnetism. The normal echelle, stretched echelle, corner diagram, and results in 'starname_magnetic_parameters_resultt.dat'
+    You also can turn off 'if_consider_magnetism' to be False so that the code will run a normal fitting, without magnetic perturbations, but also without \zeta function.
